@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Early Churn Signal Architecture — Jesse Brooks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1917;
+    --ink-secondary: #5a5955;
+    --ink-tertiary: #9a9891;
+    --surface: #faf9f7;
+    --surface-2: #f0ede8;
+    --surface-3: #e4e0d8;
+    --accent: #1d4e3f;
+    --accent-light: #e8f2ee;
+    --amber: #8a4f0d;
+    --amber-light: #fdf3e7;
+    --red: #8b2020;
+    --red-light: #fdf0f0;
+    --border: rgba(26,25,23,0.12);
+    --border-strong: rgba(26,25,23,0.22);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.75;
+    color: var(--ink);
+    background: var(--surface);
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 64px 40px 100px;
+  }
+  .kicker {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 38px;
+    line-height: 1.2;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 10px;
+    max-width: 700px;
+  }
+  .byline {
+    font-size: 13px;
+    color: var(--ink-tertiary);
+    margin-bottom: 48px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid var(--border);
+  }
+  .byline strong { color: var(--ink-secondary); font-weight: 500; }
+  h2 {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 56px 0 16px;
+  }
+  h3 {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-secondary);
+    margin: 40px 0 12px;
+  }
+  p { margin-bottom: 20px; color: var(--ink); font-size: 16px; max-width: 680px; }
+  .lede {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 19px;
+    line-height: 1.65;
+    color: var(--ink);
+    margin-bottom: 32px;
+    max-width: 700px;
+  }
+  .callout {
+    background: var(--accent-light);
+    border-left: 3px solid var(--accent);
+    padding: 20px 24px;
+    margin: 32px 0;
+    border-radius: 0 6px 6px 0;
+    max-width: 680px;
+  }
+  .callout p { color: var(--accent); margin: 0; font-size: 15px; }
+  .callout strong { font-weight: 500; }
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 32px 0;
+    max-width: 680px;
+  }
+  .stat-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .stat-num {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-label {
+    font-size: 12px;
+    color: var(--ink-secondary);
+    line-height: 1.4;
+  }
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 56px 0;
+  }
+
+  /* Signal taxonomy diagram */
+  .taxonomy {
+    margin: 32px 0;
+    max-width: 760px;
+  }
+  .taxonomy-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-tertiary);
+    margin-bottom: 20px;
+  }
+  .taxonomy-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+  .tax-col { display: flex; flex-direction: column; gap: 8px; }
+  .tax-header {
+    background: var(--ink);
+    color: var(--surface);
+    border-radius: 6px 6px 0 0;
+    padding: 12px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.35;
+  }
+  .tax-header span {
+    display: block;
+    font-size: 18px;
+    margin-bottom: 4px;
+    font-family: 'Libre Baskerville', serif;
+  }
+  .tax-col.activation .tax-header { background: #1d4e3f; }
+  .tax-col.stakeholder .tax-header { background: #2c3e7a; }
+  .tax-col.onboarding .tax-header { background: #5a2d7a; }
+  .tax-col.support .tax-header { background: #7a3a1a; }
+  .tax-col.commercial .tax-header { background: #1a4a5a; }
+  .tax-signal {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 10px;
+    font-size: 11.5px;
+    color: var(--ink-secondary);
+    line-height: 1.4;
+  }
+  .tax-signal.leading {
+    border-left: 3px solid;
+  }
+  .tax-col.activation .tax-signal.leading { border-left-color: #1d4e3f; }
+  .tax-col.stakeholder .tax-signal.leading { border-left-color: #2c3e7a; }
+  .tax-col.onboarding .tax-signal.leading { border-left-color: #5a2d7a; }
+  .tax-col.support .tax-signal.leading { border-left-color: #7a3a1a; }
+  .tax-col.commercial .tax-signal.leading { border-left-color: #1a4a5a; }
+  .tax-legend {
+    display: flex;
+    gap: 20px;
+    margin-top: 14px;
+    font-size: 11px;
+    color: var(--ink-tertiary);
+  }
+  .tax-legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch {
+    width: 20px;
+    height: 10px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .legend-swatch.leading {
+    border-left: 3px solid var(--ink);
+  }
+
+  /* Signal matrix table */
+  .matrix-wrap {
+    margin: 32px 0;
+    max-width: 760px;
+    overflow-x: auto;
+  }
+  .matrix-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-tertiary);
+    margin-bottom: 16px;
+  }
+  table.matrix {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table.matrix th {
+    text-align: left;
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-tertiary);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-strong);
+    white-space: nowrap;
+  }
+  table.matrix td {
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--ink-secondary);
+    vertical-align: top;
+    line-height: 1.45;
+  }
+  table.matrix tr:last-child td { border-bottom: none; }
+  table.matrix tr:hover td { background: rgba(0,0,0,0.02); }
+  .signal-name {
+    font-weight: 500;
+    color: var(--ink);
+    font-size: 13px;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .signal-sub {
+    font-size: 11.5px;
+    color: var(--ink-tertiary);
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .badge-leading { background: var(--accent-light); color: var(--accent); }
+  .badge-lagging { background: var(--surface-3); color: var(--ink-secondary); }
+  .weight-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .weight-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--surface-3);
+    width: 80px;
+    position: relative;
+  }
+  .weight-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--ink);
+    position: absolute;
+    left: 0; top: 0;
+  }
+  .weight-fill.high { background: #1d4e3f; width: 100%; }
+  .weight-fill.med { background: var(--amber); width: 65%; }
+  .weight-fill.low { background: var(--ink-tertiary); width: 35%; }
+  .weight-label { font-size: 11px; color: var(--ink-tertiary); }
+
+  /* Intervention trigger table */
+  .trigger-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin: 32px 0;
+    max-width: 760px;
+  }
+  .trigger-card {
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .trigger-header {
+    padding: 12px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .trigger-header .dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .tier-green .trigger-header { background: var(--accent-light); color: var(--accent); }
+  .tier-green .dot { background: var(--accent); }
+  .tier-amber .trigger-header { background: var(--amber-light); color: var(--amber); }
+  .tier-amber .dot { background: var(--amber); }
+  .tier-red .trigger-header { background: var(--red-light); color: var(--red); }
+  .tier-red .dot { background: var(--red); }
+  .trigger-body { padding: 14px 16px; background: var(--surface); }
+  .trigger-body p {
+    font-size: 12px;
+    color: var(--ink-secondary);
+    line-height: 1.55;
+    margin-bottom: 10px;
+    max-width: none;
+  }
+  .trigger-body p:last-child { margin-bottom: 0; }
+  .trigger-body strong { font-weight: 500; color: var(--ink); }
+  .trigger-body .action {
+    font-size: 11.5px;
+    padding: 8px 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+    line-height: 1.45;
+  }
+  .tier-green .action { background: var(--accent-light); color: var(--accent); }
+  .tier-amber .action { background: var(--amber-light); color: var(--amber); }
+  .tier-red .action { background: var(--red-light); color: var(--red); }
+
+  /* Lifecycle stage chart */
+  .lifecycle-wrap {
+    margin: 32px 0;
+    max-width: 760px;
+  }
+  .lifecycle-track {
+    position: relative;
+    margin: 24px 0 8px;
+  }
+  .lifecycle-stages {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    margin-bottom: 4px;
+  }
+  .ls-stage {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 8px 4px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--ink-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .ls-stage:first-child { border-radius: 5px 0 0 5px; }
+  .ls-stage:last-child { border-radius: 0 5px 5px 0; }
+  .ls-stage + .ls-stage { border-left: none; }
+  .signal-rows { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .signal-row { display: flex; align-items: center; gap: 0; }
+  .signal-row-label {
+    width: 150px;
+    flex-shrink: 0;
+    font-size: 11.5px;
+    color: var(--ink-secondary);
+    padding-right: 12px;
+    text-align: right;
+    line-height: 1.35;
+  }
+  .signal-cells {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    flex: 1;
+    gap: 3px;
+  }
+  .sig-cell {
+    height: 26px;
+    border-radius: 3px;
+    background: var(--surface-3);
+  }
+  .sig-cell.active-low { background: #b8d9ce; }
+  .sig-cell.active-med { background: #5aaa8a; }
+  .sig-cell.active-high { background: #1d4e3f; }
+
+  /* Score calculator */
+  .score-calc {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px;
+    margin: 32px 0;
+    max-width: 680px;
+  }
+  .score-calc-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 20px;
+  }
+  .score-inputs { display: flex; flex-direction: column; gap: 14px; }
+  .score-row { display: flex; align-items: center; gap: 12px; }
+  .score-row label {
+    font-size: 12px;
+    color: var(--ink-secondary);
+    width: 200px;
+    flex-shrink: 0;
+    line-height: 1.35;
+  }
+  .score-row input[type=range] {
+    flex: 1;
+    accent-color: var(--ink);
+  }
+  .score-val {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink);
+    width: 32px;
+    text-align: right;
+  }
+  .score-output {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .score-number {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .score-tier {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 6px;
+  }
+  .score-action { font-size: 12px; color: var(--ink-secondary); max-width: 320px; line-height: 1.5; }
+
+  .footnote {
+    margin-top: 64px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--ink-tertiary);
+    line-height: 1.7;
+    max-width: 640px;
+  }
+  .footnote strong { color: var(--ink-secondary); font-weight: 500; }
+
+  @media (max-width: 640px) {
+    body { padding: 40px 20px 80px; }
+    h1 { font-size: 28px; }
+    .taxonomy-grid { grid-template-columns: 1fr 1fr; }
+    .trigger-grid { grid-template-columns: 1fr; }
+    .stat-row { grid-template-columns: 1fr 1fr; }
+    .signal-row-label { width: 110px; }
+  }
+</style>
+</head>
+<body>
+
+<p class="kicker">Framework — Customer Success &amp; Retention</p>
+<h1>Early Churn Signal Architecture</h1>
+<p class="byline">By <strong>Jesse Brooks</strong> &nbsp;·&nbsp; Head of Delivery, Pointcare &nbsp;·&nbsp; 9 years in HealthTech AI B2B2C SaaS</p>
+
+<p class="lede">Most post-sales teams discover churn risk too late. Not because the signals weren't there, but because they were measuring the wrong things at the wrong time. This framework is the architecture I built and iterated across two clinical AI companies to identify at-risk accounts before the relationship showed visible strain.</p>
+
+<div class="stat-row">
+  <div class="stat-card">
+    <div class="stat-num">+35pts</div>
+    <div class="stat-label">Clinical activation lift<br>at Suki AI (24% → 59%)</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">−15%</div>
+    <div class="stat-label">Early churn reduction<br>via leading signal detection</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">116%</div>
+    <div class="stat-label">NRR at Pointcare<br>with multi-signal journey model</div>
+  </div>
+</div>
+
+<h2>The problem with lagging signals</h2>
+
+<p>The standard CS warning system is built on lagging indicators: a missed QBR, a drop in product usage, a spike in support tickets, an unresponsive champion. By the time these surface, the customer is already somewhere between frustrated and decided. Your team isn't catching risk. It's documenting it after the fact.</p>
+
+<p>The intervention math is stark. A save play executed 90 days before renewal has a meaningfully higher success rate than one executed 30 days out, which is better than one after a churn notice. Yet most teams are structured, consciously or not, to trigger action at the late stage. The tools flag what's already broken. Nobody is watching what's about to break.</p>
+
+<div class="callout">
+  <p>At Suki AI, I inherited a $3.2M ARR portfolio where churn was being detected at the "unhappy customer" stage rather than the "activation gap" stage. Building a framework that caught at-risk signal gaps in Salesforce during the first 90 days of deployment shifted intervention timing from reactive to predictive, and drove clinical activation from 24% to 59% across the portfolio.</p>
+</div>
+
+<p>The core shift is from monitoring outcomes to monitoring trajectories. Outcomes are what happened. Trajectories are where things are heading. Early signal architecture is built on trajectories.</p>
+
+<hr class="section-divider">
+
+<h2>The five signal categories</h2>
+
+<p>Churn doesn't have a single cause. It has a pattern. Across 9 years and two clinical AI companies, I've found that meaningful risk always shows up across five observable dimensions, each with both leading and lagging indicators. The leading indicators are the ones worth building your intervention logic around.</p>
+
+<div class="taxonomy">
+  <p class="taxonomy-title">Signal taxonomy — leading indicators shown with colored border</p>
+  <div class="taxonomy-grid">
+    <div class="tax-col activation">
+      <div class="tax-header"><span>01</span>Product &amp; Activation</div>
+      <div class="tax-signal leading">Feature adoption rate vs. peer cohort</div>
+      <div class="tax-signal leading">Activation milestone velocity</div>
+      <div class="tax-signal leading">Daily active usage trajectory</div>
+      <div class="tax-signal">Login frequency drop (&gt;14 days)</div>
+      <div class="tax-signal">Core workflow abandonment</div>
+    </div>
+    <div class="tax-col stakeholder">
+      <div class="tax-header"><span>02</span>Stakeholder Health</div>
+      <div class="tax-signal leading">Champion engagement cadence</div>
+      <div class="tax-signal leading">Executive sponsor meeting attendance</div>
+      <div class="tax-signal">Key contact turnover (esp. champion)</div>
+      <div class="tax-signal">Response latency on CSM outreach</div>
+      <div class="tax-signal">Org restructure / acquisition signal</div>
+    </div>
+    <div class="tax-col onboarding">
+      <div class="tax-header"><span>03</span>Onboarding Velocity</div>
+      <div class="tax-signal leading">TTV trajectory vs. segment benchmark</div>
+      <div class="tax-signal leading">Setup completion rate at day 30</div>
+      <div class="tax-signal leading">Integration milestone adherence</div>
+      <div class="tax-signal">Delayed go-live (&gt;15 days off plan)</div>
+      <div class="tax-signal">Low end-user enrollment rate</div>
+    </div>
+    <div class="tax-col support">
+      <div class="tax-header"><span>04</span>Support Patterns</div>
+      <div class="tax-signal leading">Ticket category shift (config → process)</div>
+      <div class="tax-signal leading">Escalation frequency trend</div>
+      <div class="tax-signal">CSAT drop on resolved tickets</div>
+      <div class="tax-signal">Same-issue recurrence rate</div>
+      <div class="tax-signal">Ticket volume vs. usage ratio</div>
+    </div>
+    <div class="tax-col commercial">
+      <div class="tax-header"><span>05</span>Commercial</div>
+      <div class="tax-signal leading">Contract utilization rate</div>
+      <div class="tax-signal leading">EBR/QBR engagement quality</div>
+      <div class="tax-signal">Expansion conversation avoidance</div>
+      <div class="tax-signal">Renewal discussion delay (&gt;90 days out)</div>
+      <div class="tax-signal">Procurement / legal re-engagement</div>
+    </div>
+  </div>
+  <div class="tax-legend">
+    <div class="tax-legend-item"><div class="legend-swatch leading" style="border-left-color: #1d4e3f;"></div> Leading indicator</div>
+    <div class="tax-legend-item"><div class="legend-swatch"></div> Lagging indicator</div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<h2>Signal weight matrix</h2>
+
+<p>Not all signals are equal, and weighting should vary by account segment and lifecycle stage. Below is the weighted architecture I use as a baseline, calibrated for B2B2C SaaS in regulated healthcare environments. Weights should be adjusted for your segment, sale motion, and product complexity.</p>
+
+<div class="matrix-wrap">
+  <p class="matrix-title">Signal matrix — baseline weights for healthcare B2B2C SaaS</p>
+  <table class="matrix">
+    <thead>
+      <tr>
+        <th style="width:28%">Signal</th>
+        <th style="width:13%">Category</th>
+        <th style="width:12%">Type</th>
+        <th style="width:14%">Weight</th>
+        <th style="width:18%">Primary source</th>
+        <th style="width:15%">Trigger threshold</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="signal-name">Activation milestone velocity</span><span class="signal-sub">Rate of hitting key activation milestones vs. segment cohort benchmark</span></td>
+        <td>Product</td>
+        <td><span class="badge badge-leading">Leading</span></td>
+        <td>
+          <div class="weight-bar-wrap">
+            <div class="weight-bar"><div class="weight-fill high"></div></div>
+            <span class="weight-label">High</span>
+          </div>
+        </td>
+        <td>CRM + product telemetry</td>
+        <td>&lt;60% of cohort pace at day 30</td>
+      </tr>
+      <tr>
+        <td><span class="signal-name">TTV trajectory</span><span class="signal-sub">Projected time-to-value vs. segment average at current velocity</span></td>
+        <td>Onboarding</td>
+        <td><span class="badge badge-leading">Leading</span></td>
+        <td>
+          <div class="weight-bar-wrap">
+            <div class="weight-bar"><div class="weight-fill high"></div></div>
+            <span class="weight-label">High</span>
+          </div>
+        </td>
+        <td>Onboarding tracker / CRM</td>
+        <td">&gt;20% above segment average</td>
+      </tr>
+      <tr>
+        <td><span class="signal-name">Champion engagement cadence</span><span class="signal-sub">Frequency and quality of CSM-to-champion touchpoints</span></td>
+        <td>Stakeholder</td>
+        <td><span class="badge badge-leading">Leading</span></td>
+        <td>
+          <div class="weight-bar-wrap">
+            <div class="weight-bar"><div class="weight-fill high"></div></div>
+            <span class="weight-label">High</span>
+          </div>
+        </td>
+        <td>CRM activity log / email</td>
+        <td>No substantive touchpoint in 21 days</td>
+      </tr>
+      <tr>
+        <td><span class="signal-name">Feature adoption rate</span><span class="signal-sub">Core feature adoption vs. peer cohort at equivalent tenure</span></td>
+        <td>Product</td>
+        <td><span class="badge badge-leading">Leading</span></td>
+        <td>
+          <div class="weight-bar-wrap">
+            <div class="weight-bar"><div class="weight-fill high"></div></div>
+            <span class="weight-label">High</span>
+          </div>
+        </td>
+        <td>Product telemetry</td>
+        <td>&lt;50% of cohort adoption at day 60</td>
+      </tr>
+      <tr>
+        <td><span class="signal-name">Ticket category shift</span><span class="signal-sub">Movement from configuration tickets toward process/value tickets</span></td>
+        <td>Support</td>
+        <td><span class="badge badge-leading">Leading</span></td>
+        <td>
+          <div class="weight-bar-wrap">
+            <div class="weight-bar"><div class="weight-fill med"></div></div>
+            <span class="weight-label">Med</span>
+          </div>
+        </td>
+        <td>Support platform</td>
+        <td">Absence of process tickets at month 3+</td>
+      </tr>
+      <tr>
+        <td><span class="signal-name">Contract utilization rate</span><span class="signal-sub">Actual usage vs. contracted seat / volume</span></td>
+        <td>Commercial</td>
+        <td><span class="badge badge-leading">Leading</span></td>
+        <td>
+          <div class="weight-bar-wrap">
+            <div class="weight-bar"><div class="weight-fill med"></div></div>
+            <span class="weight-label">Med</span>
+          </div>
+        </td>
+        <td>CRM / billing</td>
+        <td>&lt;70% utilization at month 4</td>
+      </tr>
+      <tr>
+        <td><span class="signal-name">EBR/QBR engagement quality</span><span class="signal-sub">Executive attendance, agenda engagement, and follow-through rate</span></td>
+        <td>Commercial</td>
+        <td><span class="badge badge-leading">Leading</span></td>
+        <td>
+          <div class="weight-bar-wrap">
+            <div class="weight-bar"><div class="weight-fill med"></div></div>
+            <span class="weight-label">Med</span>
+          </div>
+        </td>
+        <td>CRM + calendar</td>
+        <td>No exec attendance in last 2 QBRs</td>
+      </tr>
+      <tr>
+        <td><span class="signal-name">Key contact turnover</span><span class="signal-sub">Champion or economic buyer departure</span></td>
+        <td>Stakeholder</td>
+        <td><span class="badge badge-lagging">Lagging</span></td>
+        <td>
+          <div class="weight-bar-wrap">
+            <div class="weight-bar"><div class="weight-fill high"></div></div>
+            <span class="weight-label">High</span>
+          </div>
+        </td>
+        <td>CRM + LinkedIn monitoring</td>
+        <td>Any champion departure</td>
+      </tr>
+      <tr>
+        <td><span class="signal-name">Login frequency drop</span><span class="signal-sub">User session frequency falling vs. established baseline</span></td>
+        <td>Product</td>
+        <td><span class="badge badge-lagging">Lagging</span></td>
+        <td>
+          <div class="weight-bar-wrap">
+            <div class="weight-bar"><div class="weight-fill med"></div></div>
+            <span class="weight-label">Med</span>
+          </div>
+        </td>
+        <td>Product telemetry</td>
+        <td>&gt;14 consecutive days below baseline</td>
+      </tr>
+      <tr>
+        <td><span class="signal-name">Renewal discussion delay</span><span class="signal-sub">Customer avoidance of renewal conversation at 90+ days out</span></td>
+        <td>Commercial</td>
+        <td><span class="badge badge-lagging">Lagging</span></td>
+        <td>
+          <div class="weight-bar-wrap">
+            <div class="weight-bar"><div class="weight-fill low"></div></div>
+            <span class="weight-label">Low</span>
+          </div>
+        </td>
+        <td>CRM</td>
+        <td>No renewal engagement at T-90</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<hr class="section-divider">
+
+<h2>Signal intensity by lifecycle stage</h2>
+
+<p>Different signals carry different weight at different lifecycle stages. Onboarding velocity signals matter most in months 0-3. Stakeholder health signals become critical during the mid-term period where champion turnover risk peaks. Commercial signals dominate in the 90-day pre-renewal window. The matrix below shows when each signal category should be weighted most heavily in your intervention logic.</p>
+
+<div class="lifecycle-wrap">
+  <div class="lifecycle-stages">
+    <div class="ls-stage">Onboarding<br>(0-90d)</div>
+    <div class="ls-stage">Activation<br>(90-180d)</div>
+    <div class="ls-stage">Adoption<br>(180-365d)</div>
+    <div class="ls-stage">Mature<br>(Yr 1-2)</div>
+    <div class="ls-stage">Renewal<br>(T-90)</div>
+  </div>
+  <div class="signal-rows">
+    <div class="signal-row">
+      <div class="signal-row-label">Product &amp; activation</div>
+      <div class="signal-cells">
+        <div class="sig-cell active-med"></div>
+        <div class="sig-cell active-high"></div>
+        <div class="sig-cell active-high"></div>
+        <div class="sig-cell active-low"></div>
+        <div class="sig-cell active-low"></div>
+      </div>
+    </div>
+    <div class="signal-row">
+      <div class="signal-row-label">Stakeholder health</div>
+      <div class="signal-cells">
+        <div class="sig-cell active-low"></div>
+        <div class="sig-cell active-med"></div>
+        <div class="sig-cell active-high"></div>
+        <div class="sig-cell active-high"></div>
+        <div class="sig-cell active-med"></div>
+      </div>
+    </div>
+    <div class="signal-row">
+      <div class="signal-row-label">Onboarding velocity</div>
+      <div class="signal-cells">
+        <div class="sig-cell active-high"></div>
+        <div class="sig-cell active-high"></div>
+        <div class="sig-cell active-low"></div>
+        <div class="sig-cell"></div>
+        <div class="sig-cell"></div>
+      </div>
+    </div>
+    <div class="signal-row">
+      <div class="signal-row-label">Support patterns</div>
+      <div class="signal-cells">
+        <div class="sig-cell active-med"></div>
+        <div class="sig-cell active-med"></div>
+        <div class="sig-cell active-med"></div>
+        <div class="sig-cell active-low"></div>
+        <div class="sig-cell active-low"></div>
+      </div>
+    </div>
+    <div class="signal-row">
+      <div class="signal-row-label">Commercial</div>
+      <div class="signal-cells">
+        <div class="sig-cell"></div>
+        <div class="sig-cell active-low"></div>
+        <div class="sig-cell active-low"></div>
+        <div class="sig-cell active-med"></div>
+        <div class="sig-cell active-high"></div>
+      </div>
+    </div>
+  </div>
+  <div style="display: flex; gap: 16px; margin-top: 14px; font-size: 11px; color: var(--ink-tertiary);">
+    <span style="display:flex;align-items:center;gap:6px;"><span style="width:16px;height:10px;border-radius:2px;background:#1d4e3f;display:inline-block;"></span> Primary</span>
+    <span style="display:flex;align-items:center;gap:6px;"><span style="width:16px;height:10px;border-radius:2px;background:#5aaa8a;display:inline-block;"></span> Active</span>
+    <span style="display:flex;align-items:center;gap:6px;"><span style="width:16px;height:10px;border-radius:2px;background:#b8d9ce;display:inline-block;"></span> Monitor</span>
+    <span style="display:flex;align-items:center;gap:6px;"><span style="width:16px;height:10px;border-radius:2px;background:var(--surface-3);display:inline-block;"></span> Low priority</span>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<h2>Risk scoring and intervention triggers</h2>
+
+<p>Signal detection without a scoring system creates alert fatigue. The goal is a composite risk score that tells your team where to intervene, in what order of priority, and with what motion. Below is a three-tier intervention framework with score ranges and corresponding actions.</p>
+
+<div class="trigger-grid">
+  <div class="trigger-card tier-green">
+    <div class="trigger-header"><div class="dot"></div> Tier 1 — Healthy (70-100)</div>
+    <div class="trigger-body">
+      <p><strong>Profile:</strong> On-track activation, strong champion engagement, utilization at or above contracted level.</p>
+      <p><strong>Focus:</strong> Expansion readiness. Begin identifying expansion signal and initiating value conversations.</p>
+      <div class="action">Scheduled QBR cadence. Expansion playbook initiated at month 4 if utilization &gt;85%.</div>
+    </div>
+  </div>
+  <div class="trigger-card tier-amber">
+    <div class="trigger-header"><div class="dot"></div> Tier 2 — Watch (40-69)</div>
+    <div class="trigger-body">
+      <p><strong>Profile:</strong> One or more leading signals below threshold. Trajectory is degrading but relationship is intact.</p>
+      <p><strong>Focus:</strong> Targeted intervention within 7 days. Do not wait for a lagging signal to confirm the risk.</p>
+      <div class="action">CSM-led diagnostic call. Identify root signal. Executive sponsor loop-in if champion engagement is the trigger.</div>
+    </div>
+  </div>
+  <div class="trigger-card tier-red">
+    <div class="trigger-header"><div class="dot"></div> Tier 3 — At Risk (&lt;40)</div>
+    <div class="trigger-body">
+      <p><strong>Profile:</strong> Multiple high-weight signals below threshold or a single critical signal (champion departure, stalled activation) confirmed.</p>
+      <p><strong>Focus:</strong> Executive-led save play within 48 hours. Assign a dedicated recovery plan with 30-day milestones.</p>
+      <div class="action">Leadership escalation. Cross-functional recovery plan. Success plan reset if onboarding is the root cause.</div>
+    </div>
+  </div>
+</div>
+
+<h3>Interactive score estimator</h3>
+
+<div class="score-calc">
+  <div class="score-calc-title">Estimate account risk score — adjust signals to see tier classification</div>
+  <div class="score-inputs">
+    <div class="score-row">
+      <label>Activation milestone pace<br><span style="font-size:11px;color:var(--ink-tertiary)">vs. segment cohort benchmark</span></label>
+      <input type="range" min="0" max="25" value="20" id="s1" oninput="updateScore()">
+      <span class="score-val" id="v1">20</span>
+    </div>
+    <div class="score-row">
+      <label>TTV trajectory<br><span style="font-size:11px;color:var(--ink-tertiary)">vs. segment average</span></label>
+      <input type="range" min="0" max="25" value="20" id="s2" oninput="updateScore()">
+      <span class="score-val" id="v2">20</span>
+    </div>
+    <div class="score-row">
+      <label>Champion engagement<br><span style="font-size:11px;color:var(--ink-tertiary)">cadence and responsiveness</span></label>
+      <input type="range" min="0" max="20" value="16" id="s3" oninput="updateScore()">
+      <span class="score-val" id="v3">16</span>
+    </div>
+    <div class="score-row">
+      <label>Feature adoption rate<br><span style="font-size:11px;color:var(--ink-tertiary)">vs. peer cohort at tenure</span></label>
+      <input type="range" min="0" max="20" value="16" id="s4" oninput="updateScore()">
+      <span class="score-val" id="v4">16</span>
+    </div>
+    <div class="score-row">
+      <label>Contract utilization<br><span style="font-size:11px;color:var(--ink-tertiary)">actual vs. contracted</span></label>
+      <input type="range" min="0" max="10" value="8" id="s5" oninput="updateScore()">
+      <span class="score-val" id="v5">8</span>
+    </div>
+  </div>
+  <div class="score-output">
+    <div>
+      <div class="score-number" id="score-display" style="color: var(--accent);">80</div>
+      <div style="font-size:11px;color:var(--ink-tertiary);margin-top:4px;">/ 100</div>
+    </div>
+    <div>
+      <div class="score-tier" id="tier-badge" style="background:var(--accent-light);color:var(--accent);">Tier 1 — Healthy</div>
+      <div class="score-action" id="score-action">Account is on track. Focus on expansion readiness and begin value conversation if utilization is above 85%.</div>
+    </div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<h2>Implementation notes</h2>
+
+<p>Building this architecture from scratch requires three prerequisites before you touch tooling. First, a segment definition with a clear average TTV and activation milestone map for each segment. Without a benchmark, there is no trajectory to measure against. Second, a CRM that captures activity data with enough fidelity to detect engagement patterns, not just closed/won stages. Third, a documented success plan template that ties customer milestones to the signal thresholds above.</p>
+
+<p>At Pointcare, this architecture lives inside a multi-signal customer journey model in Salesforce that surfaces risk scores automatically. At Suki AI, I built an earlier version of it manually, using a combination of Salesforce activity fields and a weekly scoring review. Both versions produced meaningful early churn reduction. The tooling matters less than the discipline of defining the signals, setting the thresholds, and closing the loop between signal and intervention.</p>
+
+<div class="callout">
+  <p>One practical note for regulated environments: your signal architecture needs to be designed with audit defensibility in mind. Every intervention trigger should have a documented rationale, and every save play should be logged with timestamps and outcome notes. In healthcare SaaS, this isn't optional. It's also good practice. Teams that document intervention logic improve it faster than teams that don't.</p>
+</div>
+
+<p>The goal of this framework is not zero churn. It's earlier churn, where you have the most leverage, the lowest intervention cost, and the highest probability of a successful outcome. Start with two or three high-weight signals, set your thresholds, and build the habit of weekly review before you automate. The system gets better the more consistently it's used.</p>
+
+<div class="footnote">
+  <strong>Jesse Brooks</strong> is Head of Delivery at Pointcare, an AI-enabled health coverage management platform. He has spent 9 years building and scaling post-sales organizations in HealthTech AI B2B2C SaaS across Augmedix, Suki AI, and Pointcare. His portfolio of frameworks and case studies is available at <a href="https://jbrooksthe2nd.notion.site" style="color: var(--ink-secondary);">jbrooksthe2nd.notion.site</a>.
+</div>
+
+<script>
+function updateScore() {
+  const s1 = +document.getElementById('s1').value;
+  const s2 = +document.getElementById('s2').value;
+  const s3 = +document.getElementById('s3').value;
+  const s4 = +document.getElementById('s4').value;
+  const s5 = +document.getElementById('s5').value;
+  document.getElementById('v1').textContent = s1;
+  document.getElementById('v2').textContent = s2;
+  document.getElementById('v3').textContent = s3;
+  document.getElementById('v4').textContent = s4;
+  document.getElementById('v5').textContent = s5;
+  const total = s1 + s2 + s3 + s4 + s5;
+  document.getElementById('score-display').textContent = total;
+  const badge = document.getElementById('tier-badge');
+  const action = document.getElementById('score-action');
+  const num = document.getElementById('score-display');
+  if (total >= 70) {
+    badge.style.background = 'var(--accent-light)';
+    badge.style.color = 'var(--accent)';
+    badge.textContent = 'Tier 1 — Healthy';
+    num.style.color = 'var(--accent)';
+    action.textContent = 'Account is on track. Focus on expansion readiness and begin value conversation if utilization is above 85%.';
+  } else if (total >= 40) {
+    badge.style.background = 'var(--amber-light)';
+    badge.style.color = 'var(--amber)';
+    badge.textContent = 'Tier 2 — Watch';
+    num.style.color = 'var(--amber)';
+    action.textContent = 'One or more leading signals below threshold. Initiate a targeted CSM-led diagnostic call within 7 days. Do not wait for a lagging signal to confirm the risk.';
+  } else {
+    badge.style.background = 'var(--red-light)';
+    badge.style.color = 'var(--red)';
+    badge.textContent = 'Tier 3 — At Risk';
+    num.style.color = 'var(--red)';
+    action.textContent = 'Multiple high-weight signals below threshold. Executive-led save play required within 48 hours. Assign a dedicated recovery plan with 30-day milestones.';
+  }
+}
+</script>
+
+</body>
+</html>
