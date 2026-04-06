@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TTV as a Cost-to-Serve Lever — Jesse Brooks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Epilogue:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #18181a;
+    --ink-2: #52514e;
+    --ink-3: #a09e98;
+    --bg: #f7f5f0;
+    --bg-2: #edeae3;
+    --bg-3: #e2ded4;
+    --rule: rgba(24,24,26,0.1);
+    --rule-strong: rgba(24,24,26,0.2);
+    --buyer: #1a3a5c;
+    --buyer-light: #e8eef5;
+    --consumer: #3b1a5c;
+    --consumer-light: #ede8f5;
+    --cost: #5c1a1a;
+    --cost-light: #f5e8e8;
+    --green: #1a4a2e;
+    --green-light: #e8f2ec;
+    --amber: #5c3d0a;
+    --amber-light: #f5f0e8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Epilogue', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.75;
+    color: var(--ink);
+    background: var(--bg);
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 72px 44px 120px;
+  }
+  .kicker {
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--buyer);
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 42px;
+    line-height: 1.15;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 12px;
+    max-width: 720px;
+  }
+  .byline {
+    font-size: 12.5px;
+    color: var(--ink-3);
+    margin-bottom: 52px;
+    padding-bottom: 52px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .byline strong { color: var(--ink-2); font-weight: 500; }
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 60px 0 18px;
+  }
+  h3 {
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 44px 0 14px;
+  }
+  p {
+    margin-bottom: 20px;
+    color: var(--ink);
+    max-width: 700px;
+    font-size: 16px;
+  }
+  .lede {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 20px;
+    line-height: 1.6;
+    color: var(--ink);
+    margin-bottom: 36px;
+    max-width: 720px;
+  }
+  .callout {
+    border-left: 2px solid var(--buyer);
+    padding: 18px 24px;
+    margin: 32px 0;
+    max-width: 700px;
+    background: var(--buyer-light);
+    border-radius: 0 6px 6px 0;
+  }
+  .callout p { color: var(--buyer); margin: 0; font-size: 15px; }
+  hr.divider {
+    border: none;
+    border-top: 1px solid var(--rule);
+    margin: 60px 0;
+  }
+
+  /* ── Stat strip ── */
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 36px 0;
+    max-width: 760px;
+  }
+  .stat-item {
+    background: var(--bg-2);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 18px 16px;
+  }
+  .stat-n {
+    font-family: 'Playfair Display', serif;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .stat-l { font-size: 11.5px; color: var(--ink-2); line-height: 1.45; }
+  .stat-src { font-size: 10px; color: var(--ink-3); margin-top: 4px; display: block; }
+
+  /* ── B2B2C model diagram ── */
+  .b2b2c-diagram {
+    margin: 32px 0;
+    max-width: 760px;
+  }
+  .diagram-label {
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 18px;
+  }
+  .b2b2c-flow {
+    display: grid;
+    grid-template-columns: 1fr 40px 1fr 40px 1fr;
+    align-items: start;
+    gap: 0;
+  }
+  .flow-node {
+    border-radius: 10px;
+    padding: 20px 18px;
+    border: 1px solid var(--rule);
+  }
+  .flow-node.vendor { background: var(--bg-3); }
+  .flow-node.buyer { background: var(--buyer-light); border-color: rgba(26,58,92,0.2); }
+  .flow-node.consumer { background: var(--consumer-light); border-color: rgba(59,26,92,0.2); }
+  .flow-node-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .vendor .flow-node-title { color: var(--ink-2); }
+  .buyer .flow-node-title { color: var(--buyer); }
+  .consumer .flow-node-title { color: var(--consumer); }
+  .flow-node-desc {
+    font-size: 12.5px;
+    color: var(--ink-2);
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  .flow-node-ttv {
+    font-size: 11px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    line-height: 1.45;
+  }
+  .vendor .flow-node-ttv { background: var(--bg); color: var(--ink-2); }
+  .buyer .flow-node-ttv { background: white; color: var(--buyer); }
+  .consumer .flow-node-ttv { background: white; color: var(--consumer); }
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 28px;
+    color: var(--ink-3);
+    font-size: 18px;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .flow-arrow span {
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    text-align: center;
+    line-height: 1.4;
+  }
+  .ttv-gap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .ttv-gap-item {
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .ttv-gap-item.buyer-gap { background: var(--buyer-light); color: var(--buyer); border: 1px solid rgba(26,58,92,0.15); }
+  .ttv-gap-item.consumer-gap { background: var(--consumer-light); color: var(--consumer); border: 1px solid rgba(59,26,92,0.15); }
+  .ttv-gap-item strong { font-weight: 500; display: block; margin-bottom: 3px; }
+
+  /* ── Cost accumulation curve ── */
+  .curve-wrap {
+    margin: 32px 0;
+    max-width: 760px;
+    background: var(--bg-2);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 28px;
+  }
+  .curve-title { font-size: 10.5px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 20px; }
+  .curve-chart { position: relative; width: 100%; height: 240px; }
+  canvas#costCurve { width: 100%; height: 100%; }
+  .curve-legend {
+    display: flex;
+    gap: 20px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .curve-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11.5px;
+    color: var(--ink-2);
+  }
+  .legend-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+
+  /* ── Compression methodology ── */
+  .method-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 32px 0;
+    max-width: 760px;
+  }
+  .method-card {
+    border-radius: 8px;
+    border: 1px solid var(--rule);
+    overflow: hidden;
+  }
+  .method-header {
+    padding: 14px 16px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .method-header .num {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .method-card.track-a .method-header { background: var(--buyer-light); color: var(--buyer); }
+  .method-card.track-b .method-header { background: var(--consumer-light); color: var(--consumer); }
+  .method-card.track-c .method-header { background: var(--green-light); color: var(--green); }
+  .method-body {
+    padding: 14px 16px;
+    background: var(--bg);
+  }
+  .method-body p {
+    font-size: 12.5px;
+    color: var(--ink-2);
+    margin-bottom: 10px;
+    max-width: none;
+    line-height: 1.55;
+  }
+  .method-body p:last-child { margin: 0; }
+  .method-body strong { font-weight: 500; color: var(--ink); }
+  .method-tag {
+    display: inline-block;
+    font-size: 10.5px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    margin-top: 8px;
+    font-weight: 500;
+  }
+  .track-a .method-tag { background: var(--buyer-light); color: var(--buyer); }
+  .track-b .method-tag { background: var(--consumer-light); color: var(--consumer); }
+  .track-c .method-tag { background: var(--green-light); color: var(--green); }
+
+  /* ── TTV cost calculator ── */
+  .calc-wrap {
+    background: var(--ink);
+    border-radius: 12px;
+    padding: 36px;
+    margin: 32px 0;
+    max-width: 760px;
+    color: white;
+  }
+  .calc-title {
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 8px;
+  }
+  .calc-subtitle {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 28px;
+    line-height: 1.3;
+  }
+  .calc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 28px;
+  }
+  .calc-col-title {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .calc-col-title.buyer-col { color: #7aabd4; }
+  .calc-col-title.consumer-col { color: #a87ad4; }
+  .calc-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .calc-row label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.65);
+    flex: 1;
+    line-height: 1.35;
+  }
+  .calc-row input[type=range] {
+    width: 90px;
+    accent-color: rgba(255,255,255,0.7);
+    flex-shrink: 0;
+  }
+  .calc-val {
+    font-size: 12px;
+    font-weight: 500;
+    color: white;
+    min-width: 42px;
+    text-align: right;
+  }
+  .calc-divider { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 24px 0; }
+  .calc-outputs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .calc-out {
+    background: rgba(255,255,255,0.07);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .calc-out-label {
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+  .calc-out-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: white;
+    line-height: 1;
+  }
+  .calc-out-sub {
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 4px;
+  }
+  .calc-insight {
+    margin-top: 20px;
+    padding: 14px 18px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.6;
+    border-left: 2px solid rgba(255,255,255,0.2);
+  }
+
+  /* ── Benchmark table ── */
+  .bench-wrap {
+    margin: 32px 0;
+    max-width: 760px;
+    overflow-x: auto;
+  }
+  table.bench {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table.bench th {
+    text-align: left;
+    font-weight: 500;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  table.bench td {
+    padding: 12px 12px;
+    border-bottom: 1px solid var(--rule);
+    color: var(--ink-2);
+    vertical-align: top;
+  }
+  table.bench tr:last-child td { border-bottom: none; }
+  .bench-name { font-weight: 500; color: var(--ink); font-size: 13px; display: block; margin-bottom: 2px; }
+  .bench-sub { font-size: 11px; color: var(--ink-3); }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10.5px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .badge-buyer { background: var(--buyer-light); color: var(--buyer); }
+  .badge-consumer { background: var(--consumer-light); color: var(--consumer); }
+  .badge-both { background: var(--green-light); color: var(--green); }
+  .impact-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .impact-bar { height: 5px; background: var(--bg-3); border-radius: 3px; width: 80px; position: relative; }
+  .impact-fill { height: 100%; border-radius: 3px; position: absolute; left: 0; top: 0; }
+  .impact-fill.high { background: var(--green); width: 100%; }
+  .impact-fill.med { background: var(--amber); width: 60%; }
+  .impact-label { font-size: 10.5px; color: var(--ink-3); }
+
+  .footnote {
+    margin-top: 72px;
+    padding-top: 32px;
+    border-top: 1px solid var(--rule);
+    font-size: 13px;
+    color: var(--ink-3);
+    line-height: 1.7;
+    max-width: 660px;
+  }
+  .footnote strong { color: var(--ink-2); font-weight: 500; }
+
+  @media (max-width: 640px) {
+    body { padding: 40px 20px 80px; }
+    h1 { font-size: 30px; }
+    .stat-strip { grid-template-columns: 1fr 1fr; }
+    .b2b2c-flow { grid-template-columns: 1fr; }
+    .flow-arrow { display: none; }
+    .method-grid { grid-template-columns: 1fr; }
+    .calc-grid { grid-template-columns: 1fr; }
+    .calc-outputs { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<p class="kicker">Framework — Cost-to-Serve &amp; Onboarding</p>
+<h1>TTV Is a Cost Metric. Most Teams Treat It Like a Satisfaction Score.</h1>
+<p class="byline">By <strong>Jesse Brooks</strong> &nbsp;·&nbsp; Head of Delivery, Pointcare &nbsp;·&nbsp; 9 years in HealthTech AI B2B2C SaaS</p>
+
+<p class="lede">Every day your customer hasn't reached value is a day your team is still paying to deliver it. In B2B2C SaaS, that cost runs on two tracks simultaneously — and most post-sales orgs are only managing one of them.</p>
+
+<p>Time-to-value gets measured in most SaaS organizations. It rarely gets managed as a cost discipline. The conversation tends to center on customer satisfaction: the faster a customer reaches their "aha moment," the happier they are, and the less likely they are to churn in year one. That framing is correct but incomplete. It treats TTV as a customer experience output rather than an operating cost input.</p>
+
+<p>The more precise framing: every day of onboarding delay has a direct cost-to-serve implication. It consumes implementation hours, extends the period before expansion is possible, and correlates strongly with first-year churn, which means the acquisition cost of that customer may never be recovered. The research bears this out. <strong>83% of B2B buyers say slow onboarding is a dealbreaker</strong>, and <strong>over 20% of voluntary SaaS churn is linked directly to poor onboarding experiences.</strong> Meanwhile, <strong>60-70% of annual churn happens within the first 90 days</strong>, which means the onboarding window is simultaneously your highest-cost period and your highest-risk period.</p>
+
+<p>In B2B2C SaaS, this dynamic is more complex than a standard enterprise model, because TTV operates on two separate tracks with two different definitions of value, two different risk profiles, and two different cost implications. Managing one without the other leaves half the problem unaddressed.</p>
+
+<div class="stat-strip">
+  <div class="stat-item">
+    <div class="stat-n">83%</div>
+    <div class="stat-l">of B2B buyers say slow onboarding is a dealbreaker</div>
+    <span class="stat-src">Rocketlane, 2025</span>
+  </div>
+  <div class="stat-item">
+    <div class="stat-n">65%</div>
+    <div class="stat-l">of annual churn concentrates in the first 90 days</div>
+    <span class="stat-src">Paddle / ProfitWell, 2025</span>
+  </div>
+  <div class="stat-item">
+    <div class="stat-n">20%+</div>
+    <div class="stat-l">of voluntary SaaS churn linked directly to poor onboarding</div>
+    <span class="stat-src">SERPsculpt via SundaySky, 2025</span>
+  </div>
+  <div class="stat-item">
+    <div class="stat-n">59%</div>
+    <div class="stat-l">of SaaS buyers regret at least one purchase in the last 18 months</div>
+    <span class="stat-src">Gartner Software Buying Trends, 2025</span>
+  </div>
+</div>
+
+<hr class="divider">
+
+<h2>The B2B2C TTV problem is not one problem — it's two</h2>
+
+<p>Standard enterprise SaaS has one TTV track: the buyer organization reaches value when the platform delivers on its business case. The buyer is also the user. Success and satisfaction converge in the same person.</p>
+
+<p>B2B2C SaaS has a structural split. The buyer, typically a VP, administrator, or department head, purchased based on an expected business outcome. The consumer, the end user who actually operates the product day-to-day, is a different person with a different definition of value, a different tolerance for friction, and a different churn risk profile. Both tracks have to close. If only one does, you have a problem that will eventually surface as a retention failure.</p>
+
+<div class="b2b2c-diagram">
+  <p class="diagram-label">B2B2C TTV model — dual-track value delivery</p>
+  <div class="b2b2c-flow">
+    <div class="flow-node vendor">
+      <div class="flow-node-title">Vendor (Post-Sales)</div>
+      <div class="flow-node-desc">Delivery org responsible for closing both value tracks on time and within cost-to-serve threshold.</div>
+      <div class="flow-node-ttv">TTV target: segment benchmark<br>Cost lever: onboarding duration × team hours</div>
+    </div>
+    <div class="flow-arrow">→<span>Onboards &amp; activates</span></div>
+    <div class="flow-node buyer">
+      <div class="flow-node-title">Buyer (B2B)</div>
+      <div class="flow-node-desc">Organization that purchased the platform. Measures value through business outcomes: ROI, efficiency, compliance, cost reduction.</div>
+      <div class="flow-node-ttv" style="margin-bottom:8px"><strong>Value moment:</strong> Business outcome visible in reporting or workflow.</div>
+      <div class="flow-node-ttv"><strong>Churn risk:</strong> Slow deployment, low end-user adoption rate, unclear ROI at 90 days.</div>
+    </div>
+    <div class="flow-arrow">→<span>Deploys to</span></div>
+    <div class="flow-node consumer">
+      <div class="flow-node-title">Consumer (B2C)</div>
+      <div class="flow-node-desc">End users who operate the product. Measures value through usability, time saved, and daily workflow fit.</div>
+      <div class="flow-node-ttv" style="margin-bottom:8px"><strong>Value moment:</strong> First completed workflow with no friction or escalation.</div>
+      <div class="flow-node-ttv"><strong>Churn risk:</strong> Abandonment within first 7 days, low activation, shadow tool usage.</div>
+    </div>
+  </div>
+  <div class="ttv-gap">
+    <div class="ttv-gap-item buyer-gap">
+      <strong>Buyer TTV failure mode</strong>
+      Deployment completes on paper but adoption is low. Buyer sees the platform is live but cannot point to business outcome. Contract is technically fulfilled; renewal is at risk.
+    </div>
+    <div class="ttv-gap-item consumer-gap">
+      <strong>Consumer TTV failure mode</strong>
+      End users complete setup but don't return. Friction in daily workflow drives shadow tool usage or quiet abandonment. Buyer's utilization data tells the real story at QBR.
+    </div>
+  </div>
+</div>
+
+<p>The cost implication of this split is significant. When either track fails, your team pays twice: once during the extended onboarding window, and again during the save play that follows. In healthcare B2B2C specifically, where end users are clinicians, benefits administrators, or covered members with zero tolerance for friction, the consumer TTV track is frequently the one that breaks first and most quietly.</p>
+
+<p>At Pointcare, we reduced average onboarding from 124 days to 88 days, a 29% compression, by building a Salesforce onboarding tracker and deploying a customer setup wizard in collaboration with Engineering. The compression happened on both tracks simultaneously: the buyer-side milestone structure became visible and accountable, and the consumer-side activation path was shortened through guided setup tooling. Separating the two tracks conceptually was the prerequisite for fixing either of them operationally.</p>
+
+<hr class="divider">
+
+<h2>What TTV compression actually costs to run</h2>
+
+<p>The lifecycle cost of onboarding accumulates unevenly. The chart below illustrates where cost concentrates across the dual-track model: buyer-side costs peak during configuration and stakeholder alignment, consumer-side costs peak during activation and the first 30 days of live usage. Both tracks have a resolution point after which cost-to-serve drops materially. The goal of TTV compression is to move both resolution points earlier.</p>
+
+<div class="curve-wrap">
+  <p class="curve-title">Cost accumulation curve — B2B2C onboarding lifecycle (indexed)</p>
+  <div class="curve-chart">
+    <canvas id="costCurve"></canvas>
+  </div>
+  <div class="curve-legend">
+    <div class="curve-legend-item"><div class="legend-dot" style="background:var(--buyer)"></div> Buyer-side cost (implementation, stakeholder mgmt, config)</div>
+    <div class="curve-legend-item"><div class="legend-dot" style="background:var(--consumer)"></div> Consumer-side cost (activation, training, support escalations)</div>
+    <div class="curve-legend-item"><div class="legend-dot" style="background:var(--green)"></div> Combined cost-to-serve</div>
+  </div>
+</div>
+
+<p>The practical takeaway from this curve is that the highest-cost period is not the beginning of onboarding, it is the middle, where buyer-side complexity (integration, configuration, stakeholder alignment) overlaps with consumer-side friction (initial activation, support volume, early escalations). Teams that compress TTV do so by shortening this overlap window, not by rushing either track independently.</p>
+
+<hr class="divider">
+
+<h2>The three-track compression methodology</h2>
+
+<p>TTV compression in B2B2C post-sales is not a single lever. It runs across three distinct tracks, each targeting a different cost driver. The most durable improvements address all three.</p>
+
+<div class="method-grid">
+  <div class="method-card track-a">
+    <div class="method-header">
+      <span class="num">01</span>
+      Buyer-side acceleration
+    </div>
+    <div class="method-body">
+      <p><strong>Target:</strong> Implementation timeline, milestone accountability, stakeholder alignment speed.</p>
+      <p>Build a structured onboarding tracker inside your CRM with segment-specific milestone maps and automated status visibility for the buyer. The buyer's ability to see progress removes the "what's happening" escalation that consumes the most CSM hours during implementation.</p>
+      <p>At Pointcare, a Salesforce onboarding tracker with 30-day milestone visibility and auto-triggered stakeholder check-ins was the primary driver of buyer-side TTV compression.</p>
+      <div class="method-tag">Primary cost driver: implementation hours</div>
+    </div>
+  </div>
+  <div class="method-card track-b">
+    <div class="method-header">
+      <span class="num">02</span>
+      Consumer-side activation
+    </div>
+    <div class="method-body">
+      <p><strong>Target:</strong> End-user activation rate, first-week completion, support escalation volume.</p>
+      <p>Build a consumer-facing setup wizard or guided activation flow that reduces the distance between account creation and first completed workflow. In healthcare SaaS, this has to be designed for low-tech-tolerance users with minimal documentation dependence.</p>
+      <p>At Suki AI, building an intervention framework that identified at-risk activation signal gaps early drove clinical activation from 24% to 59% and reduced early churn by 15%.</p>
+      <div class="method-tag">Primary cost driver: support escalations + re-activation</div>
+    </div>
+  </div>
+  <div class="method-card track-c">
+    <div class="method-header">
+      <span class="num">03</span>
+      Structural automation
+    </div>
+    <div class="method-body">
+      <p><strong>Target:</strong> Repetitive implementation tasks, status reporting, routine outreach, documentation generation.</p>
+      <p>Identify every step in your onboarding process that is templatable, status-driven, or repetitive and route it to your automated operating stack. This is not about replacing relationship management — it is about removing the administrative layer that sits underneath it.</p>
+      <p>At Pointcare, an automated operating stack across Notion, Claude, HubSpot, and Rippling enables a 50-person org to service 130+ accounts at 8% cost-to-serve.</p>
+      <div class="method-tag">Primary cost driver: hours per account at scale</div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<h2>TTV cost model calculator</h2>
+
+<p>The calculator below models the cost-to-serve impact of onboarding duration in a B2B2C context, separating buyer-side and consumer-side cost drivers. Adjust the inputs to model your own org's numbers.</p>
+
+<div class="calc-wrap">
+  <p class="calc-title">Interactive model</p>
+  <p class="calc-subtitle">B2B2C TTV cost-to-serve calculator</p>
+  <div class="calc-grid">
+    <div>
+      <p class="calc-col-title buyer-col">Buyer-side inputs</p>
+      <div class="calc-row">
+        <label>Avg. onboarding duration<br><span style="font-size:10.5px;opacity:0.6">days to buyer go-live</span></label>
+        <input type="range" min="30" max="180" value="88" id="bDays" oninput="calcTTV()">
+        <span class="calc-val" id="bDaysV">88d</span>
+      </div>
+      <div class="calc-row">
+        <label>Impl. hours per account<br><span style="font-size:10.5px;opacity:0.6">CSM + impl. specialist</span></label>
+        <input type="range" min="10" max="120" value="40" id="bHours" oninput="calcTTV()">
+        <span class="calc-val" id="bHoursV">40h</span>
+      </div>
+      <div class="calc-row">
+        <label>Blended team cost<br><span style="font-size:10.5px;opacity:0.6">$ per hour fully loaded</span></label>
+        <input type="range" min="40" max="150" value="75" id="bRate" oninput="calcTTV()">
+        <span class="calc-val" id="bRateV">$75</span>
+      </div>
+      <div class="calc-row">
+        <label>New logos per year</label>
+        <input type="range" min="10" max="200" value="40" id="logos" oninput="calcTTV()">
+        <span class="calc-val" id="logosV">40</span>
+      </div>
+    </div>
+    <div>
+      <p class="calc-col-title consumer-col">Consumer-side inputs</p>
+      <div class="calc-row">
+        <label>End users per account<br><span style="font-size:10.5px;opacity:0.6">avg. across portfolio</span></label>
+        <input type="range" min="1" max="50" value="8" id="users" oninput="calcTTV()">
+        <span class="calc-val" id="usersV">8</span>
+      </div>
+      <div class="calc-row">
+        <label>Activation support hrs<br><span style="font-size:10.5px;opacity:0.6">per end user first 30d</span></label>
+        <input type="range" min="0.5" max="6" value="2" step="0.5" id="actHours" oninput="calcTTV()">
+        <span class="calc-val" id="actHoursV">2h</span>
+      </div>
+      <div class="calc-row">
+        <label>Activation rate<br><span style="font-size:10.5px;opacity:0.6">% of users who activate</span></label>
+        <input type="range" min="20" max="100" value="65" id="actRate" oninput="calcTTV()">
+        <span class="calc-val" id="actRateV">65%</span>
+      </div>
+      <div class="calc-row">
+        <label>Avg. ARR per account<br><span style="font-size:10.5px;opacity:0.6">$ thousands</span></label>
+        <input type="range" min="10" max="500" value="80" id="arr" oninput="calcTTV()">
+        <span class="calc-val" id="arrV">$80k</span>
+      </div>
+    </div>
+  </div>
+  <hr class="calc-divider">
+  <div class="calc-outputs">
+    <div class="calc-out">
+      <div class="calc-out-label">Per-account onboarding cost<br>(buyer + consumer tracks)</div>
+      <div class="calc-out-val" id="perAcct">—</div>
+      <div class="calc-out-sub">total cost-to-activate</div>
+    </div>
+    <div class="calc-out">
+      <div class="calc-out-label">Annual onboarding cost<br>across all new logos</div>
+      <div class="calc-out-val" id="annualCost">—</div>
+      <div class="calc-out-sub">fleet-wide investment</div>
+    </div>
+    <div class="calc-out">
+      <div class="calc-out-label">Cost-to-serve<br>as % of new ARR</div>
+      <div class="calc-out-val" id="ctsPct">—</div>
+      <div class="calc-out-sub">onboarding CTS only</div>
+    </div>
+  </div>
+  <div class="calc-insight" id="calcInsight">Adjust the inputs above to model your org.</div>
+</div>
+
+<hr class="divider">
+
+<h2>TTV compression levers by impact and track</h2>
+
+<p>Not every intervention has equal leverage. The table below maps specific TTV compression levers to their primary cost impact, the track they address, and the implementation complexity. Sequence investments from high-impact, low-complexity interventions first.</p>
+
+<div class="bench-wrap">
+  <table class="bench">
+    <thead>
+      <tr>
+        <th style="width:28%">Lever</th>
+        <th style="width:12%">Track</th>
+        <th style="width:16%">Primary cost driver</th>
+        <th style="width:14%">Impact</th>
+        <th style="width:15%">Complexity</th>
+        <th style="width:15%">Pointcare evidence</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="bench-name">CRM onboarding tracker</span><span class="bench-sub">Milestone visibility + automated stakeholder check-ins</span></td>
+        <td><span class="badge badge-buyer">Buyer</span></td>
+        <td>CSM escalation hours</td>
+        <td><div class="impact-bar-wrap"><div class="impact-bar"><div class="impact-fill high"></div></div><span class="impact-label">High</span></div></td>
+        <td>Medium</td>
+        <td>Core driver of 124→88d compression</td>
+      </tr>
+      <tr>
+        <td><span class="bench-name">Consumer setup wizard</span><span class="bench-sub">Guided activation flow reducing time to first completed workflow</span></td>
+        <td><span class="badge badge-consumer">Consumer</span></td>
+        <td>Activation support hours</td>
+        <td><div class="impact-bar-wrap"><div class="impact-bar"><div class="impact-fill high"></div></div><span class="impact-label">High</span></div></td>
+        <td>High</td>
+        <td>Engineering co-build at Pointcare</td>
+      </tr>
+      <tr>
+        <td><span class="bench-name">Segment-specific milestone maps</span><span class="bench-sub">TTV benchmarks and milestone sequences by account segment</span></td>
+        <td><span class="badge badge-both">Both</span></td>
+        <td>Re-work + timeline slip</td>
+        <td><div class="impact-bar-wrap"><div class="impact-bar"><div class="impact-fill high"></div></div><span class="impact-label">High</span></div></td>
+        <td>Low</td>
+        <td>Segment playbooks → $1.7M expansion ARR</td>
+      </tr>
+      <tr>
+        <td><span class="bench-name">At-risk activation detection</span><span class="bench-sub">Signal framework identifying consumer activation gaps early</span></td>
+        <td><span class="badge badge-consumer">Consumer</span></td>
+        <td>Early churn + re-onboarding</td>
+        <td><div class="impact-bar-wrap"><div class="impact-bar"><div class="impact-fill high"></div></div><span class="impact-label">High</span></div></td>
+        <td>Medium</td>
+        <td>24%→59% activation at Suki AI</td>
+      </tr>
+      <tr>
+        <td><span class="bench-name">Automated status reporting</span><span class="bench-sub">Stakeholder-facing progress reports auto-generated from CRM data</span></td>
+        <td><span class="badge badge-buyer">Buyer</span></td>
+        <td>Ops + CSM reporting hours</td>
+        <td><div class="impact-bar-wrap"><div class="impact-bar"><div class="impact-fill med"></div></div><span class="impact-label">Med</span></div></td>
+        <td>Low</td>
+        <td>Part of Pointcare automated stack</td>
+      </tr>
+      <tr>
+        <td><span class="bench-name">Onboarding ramp program</span><span class="bench-sub">Structured new-hire ramp with 30-day forward visibility</span></td>
+        <td><span class="badge badge-both">Both</span></td>
+        <td>Early-stage team attrition</td>
+        <td><div class="impact-bar-wrap"><div class="impact-bar"><div class="impact-fill med"></div></div><span class="impact-label">Med</span></div></td>
+        <td>Medium</td>
+        <td>−11% early attrition at Augmedix</td>
+      </tr>
+      <tr>
+        <td><span class="bench-name">Integration pre-validation</span><span class="bench-sub">Technical requirements confirmed pre-kickoff, not during implementation</span></td>
+        <td><span class="badge badge-buyer">Buyer</span></td>
+        <td>Delayed go-live, re-work cycles</td>
+        <td><div class="impact-bar-wrap"><div class="impact-bar"><div class="impact-fill med"></div></div><span class="impact-label">Med</span></div></td>
+        <td>Low</td>
+        <td>Standard practice in regulated envs.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<hr class="divider">
+
+<h2>The compounding math of TTV improvement</h2>
+
+<p>TTV compression compounds in a way that most post-sales leaders underestimate because the benefits run across four separate financial lines simultaneously.</p>
+
+<p>The first is direct cost reduction. Shorter onboarding means fewer hours consumed per account. At scale, a 30-day reduction in average TTV across 40 new logos per year, at a blended team cost of $75 per hour, is material savings that show up directly in cost-to-serve metrics.</p>
+
+<p>The second is churn reduction. Given that 65% of annual churn concentrates in the first 90 days, every compression of the onboarding window moves accounts past the highest-risk period faster. A customer who reaches value in 60 days has a meaningfully different first-year retention profile than one who reaches it in 120 days. That difference multiplies across every new logo cohort.</p>
+
+<p>The third is expansion readiness. You cannot run an expansion motion on an account that hasn't reached value on its primary use case. TTV compression pulls the expansion conversation forward. At Pointcare, the $1.7M in net-new expansion ARR over two years was directly enabled by segment-specific playbooks that could only be activated once buyer-side value was confirmed. Faster TTV means a larger window for expansion conversations within the same contract year.</p>
+
+<p>The fourth is team capacity. Every hour your implementation and CS team is not managing onboarding complexity is an hour available for higher-leverage work. In a 50-person org servicing 130+ accounts, the aggregate capacity recovered by TTV compression is not marginal. It is the structural difference between a team that is reactive and a team that has the headspace to be strategic.</p>
+
+<div class="callout">
+  <p>The 29% TTV compression at Pointcare, from 124 to 88 days, was not primarily a customer satisfaction story. It was a cost-to-serve story. The customer experience improvement was real and measurable. But the operating case for the investment was built on the cost math: fewer hours per account, lower escalation volume in the first 90 days, and earlier access to the expansion motion. Build the business case that way. It will get funded faster and measured more rigorously.</p>
+</div>
+
+<p>TTV is the earliest lever in post-sales with the longest downstream effect. Teams that treat it as a satisfaction metric optimize for the wrong output. Teams that treat it as a cost metric build the infrastructure to manage it systematically, and the results show up in NRR, cost-to-serve, and expansion ARR simultaneously.</p>
+
+<div class="footnote">
+  <strong>Jesse Brooks</strong> is Head of Delivery at Pointcare, an AI-enabled health coverage management platform. He has spent 9 years building and scaling post-sales organizations in HealthTech AI B2B2C SaaS across Augmedix, Suki AI, and Pointcare. His portfolio of frameworks and case studies is available at <a href="https://jbrooksthe2nd.notion.site" style="color:var(--ink-2)">jbrooksthe2nd.notion.site</a>.
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ── Cost curve chart ──
+const ctx = document.getElementById('costCurve').getContext('2d');
+const labels = ['Day 0','Day 15','Day 30','Day 45','Day 60','Day 75','Day 88','Day 100','Day 120'];
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [
+      {
+        label: 'Buyer-side',
+        data: [20, 55, 80, 90, 75, 55, 35, 22, 15],
+        borderColor: '#1a3a5c',
+        backgroundColor: 'rgba(26,58,92,0.08)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3,
+        pointBackgroundColor: '#1a3a5c'
+      },
+      {
+        label: 'Consumer-side',
+        data: [5, 20, 45, 70, 85, 80, 60, 40, 25],
+        borderColor: '#3b1a5c',
+        backgroundColor: 'rgba(59,26,92,0.07)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3,
+        pointBackgroundColor: '#3b1a5c'
+      },
+      {
+        label: 'Combined CTS',
+        data: [25, 75, 125, 160, 160, 135, 95, 62, 40],
+        borderColor: '#1a4a2e',
+        backgroundColor: 'rgba(26,74,46,0)',
+        borderWidth: 2.5,
+        fill: false,
+        tension: 0.4,
+        borderDash: [5, 4],
+        pointRadius: 3,
+        pointBackgroundColor: '#1a4a2e'
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: {
+        grid: { color: 'rgba(0,0,0,0.06)' },
+        ticks: { font: { size: 11 }, color: '#a09e98' }
+      },
+      y: {
+        grid: { color: 'rgba(0,0,0,0.06)' },
+        ticks: { font: { size: 11 }, color: '#a09e98' },
+        title: { display: true, text: 'Indexed cost (combined = 100 at peak)', font: { size: 10 }, color: '#a09e98' }
+      }
+    }
+  }
+});
+
+// ── TTV calculator ──
+function fmt(n) {
+  if (n >= 1000000) return '$' + Math.round(n/1000)/10 + 'M';
+  if (n >= 1000) return '$' + Math.round(n/1000) + 'k';
+  return '$' + Math.round(n);
+}
+function calcTTV() {
+  const bDays = +document.getElementById('bDays').value;
+  const bHours = +document.getElementById('bHours').value;
+  const bRate = +document.getElementById('bRate').value;
+  const logos = +document.getElementById('logos').value;
+  const users = +document.getElementById('users').value;
+  const actHours = +document.getElementById('actHours').value;
+  const actRate = +document.getElementById('actRate').value / 100;
+  const arr = +document.getElementById('arr').value * 1000;
+
+  document.getElementById('bDaysV').textContent = bDays + 'd';
+  document.getElementById('bHoursV').textContent = bHours + 'h';
+  document.getElementById('bRateV').textContent = '$' + bRate;
+  document.getElementById('logosV').textContent = logos;
+  document.getElementById('usersV').textContent = users;
+  document.getElementById('actHoursV').textContent = actHours + 'h';
+  document.getElementById('actRateV').textContent = actRate * 100 + '%';
+  document.getElementById('arrV').textContent = '$' + arr/1000 + 'k';
+
+  const buyerCost = bHours * bRate;
+  const consumerCost = users * actHours * bRate;
+  const perAcct = buyerCost + consumerCost;
+  const annualCost = perAcct * logos;
+  const newARR = arr * logos;
+  const ctsPct = (annualCost / newARR * 100).toFixed(1);
+
+  document.getElementById('perAcct').textContent = fmt(perAcct);
+  document.getElementById('annualCost').textContent = fmt(annualCost);
+  document.getElementById('ctsPct').textContent = ctsPct + '%';
+
+  let insight = '';
+  const pct = parseFloat(ctsPct);
+  if (actRate < 0.5) {
+    insight = `A ${Math.round(actRate*100)}% consumer activation rate is below the 50% industry floor for B2B SaaS. Low activation is the most expensive cost driver in the model — re-activation and save plays after failed first-use cost 3-5x more than preventing the gap initially. The consumer track is your highest-leverage intervention.`;
+  } else if (pct > 15) {
+    insight = `At ${ctsPct}% of new ARR, your onboarding cost-to-serve is above the 8-12% benchmark for efficient B2B2C post-sales orgs. The highest-leverage compression lever in your model is buyer-side implementation hours — even a 20% reduction would bring CTS below ${(pct * 0.8).toFixed(1)}%.`;
+  } else if (pct < 5) {
+    insight = `At ${ctsPct}% of new ARR, your onboarding CTS is below the 8% benchmark. Validate that your activation rate inputs reflect reality — very low CTS sometimes indicates underinvestment in consumer-side activation, which shows up later as first-year churn rather than onboarding cost.`;
+  } else {
+    insight = `At ${ctsPct}% of new ARR, your onboarding CTS is within the 5-12% benchmark range for B2B2C SaaS. The consumer-side track is costing ${fmt(consumerCost)} per account — ${Math.round(consumerCost/perAcct*100)}% of total per-account cost. If activation rate is below 70%, consumer-track compression should be your next investment.`;
+  }
+  document.getElementById('calcInsight').textContent = insight;
+}
+calcTTV();
+</script>
+</body>
+</html>
